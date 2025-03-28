@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138332339517",
+    "project_id": "interview-task-bd035",
+    "storage_bucket": "interview-task-bd035.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138332339517:android:591870662642dcbf81d954",
+        "android_client_info": {
+          "package_name": "com.example.interview_task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgD0KxRWPxwZVhL2esGCXlT5ITo0KlY-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
