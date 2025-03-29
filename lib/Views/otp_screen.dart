@@ -1,13 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 import '../Controllers/auth_controller.dart';
 
-class OTPScreen extends StatelessWidget {
-  OTPScreen({super.key});
+class OTPScreen extends StatefulWidget {
+  const OTPScreen({super.key});
 
+  @override
+  State<OTPScreen> createState() => _OTPScreenState();
+}
+
+class _OTPScreenState extends State<OTPScreen> with CodeAutoFill {
   final AuthController authController = Get.find<AuthController>();
   final TextEditingController otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    listenForCode(); 
+  }
+
+  @override
+  void codeUpdated() {
+    setState(() {
+      otpController.text = code ?? ""; 
+    });
+    if (otpController.text.length == 6) {
+      authController.verifyOTP(otpController.text);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,45 +81,18 @@ class OTPScreen extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  TextFormField(
+                  PinFieldAutoFill(
                     controller: otpController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                    codeLength: 6,
+                    decoration: BoxLooseDecoration(
+                      strokeColorBuilder: FixedColorBuilder(Colors.grey),
+                      bgColorBuilder: FixedColorBuilder(Colors.white),
                     ),
-                    decoration: InputDecoration(
-                      hintText: 'Enter 6-digit OTP',
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 15,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Color(0xFF673AB7),
-                          width: 2,
-                        ),
-                      ),
-                      counterText: '',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter OTP';
+                    currentCode: otpController.text,
+                    onCodeChanged: (code) {
+                      if (code != null && code.length == 6) {
+                        authController.verifyOTP(code);
                       }
-                      if (value.length != 6) {
-                        return 'OTP must be 6 digits';
-                      }
-                      return null;
                     },
                   ),
 
@@ -134,4 +129,11 @@ class OTPScreen extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    SmsAutoFill().unregisterListener();
+    super.dispose();
+  }
 }
+

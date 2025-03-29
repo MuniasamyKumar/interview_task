@@ -11,6 +11,8 @@ void main() async {
   runApp(const MyApp());
 }
 
+// I'm facing the issues in API Integration So i use dummy data in this project (My API Facing socket error so i'll solve ASAP)
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -18,7 +20,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-
       initialRoute: AppRoutes.phoneNumberScreen,
       getPages: AppRoutes.routes,
       theme: ThemeData(

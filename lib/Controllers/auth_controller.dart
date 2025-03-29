@@ -53,7 +53,7 @@ class AuthController extends GetxController {
       await _auth.signInWithCredential(credential);
       user.value = _getUser();
       Get.snackbar("Success", "User signed in successfully");
-      Get.offAndToNamed(AppRoutes.home);
+      Get.offAllNamed(AppRoutes.home);
     } catch (e) {
       Get.snackbar("Error", "Invalid OTP");
     }
