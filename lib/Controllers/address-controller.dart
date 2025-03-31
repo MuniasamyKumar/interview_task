@@ -1,148 +1,206 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interview_task/Model/address_model.dart';
 
 class AddressController extends GetxController {
   var addresses = <AddressModel>[].obs;
+  var isLoading = false.obs;
+  var error = ''.obs;
+
+  final Dio _dio = Dio();
+  final String baseUrl = "https://nodeapimongodb-d6ml.onrender.com/api/address";
 
   @override
   void onInit() {
     super.onInit();
-    loadDummyData();
+    fetchAddresses();
   }
 
-  void loadDummyData() {
-    addresses.addAll([
-      AddressModel(id: "1", streetAddress: "123 Main St", city: "New York", state: "NY", postalCode: "10001", country: "USA"),
-      AddressModel(id: "2", streetAddress: "456 Elm St", city: "Los Angeles", state: "CA", postalCode: "90001", country: "USA"),
-      AddressModel(id: "3", streetAddress: "789 Oak St", city: "Chicago", state: "IL", postalCode: "60601", country: "USA"),
-    ]);
-  }
+  void fetchAddresses() async {
+    isLoading.value = true;
+    error.value = '';
+    try {
+      final response = await _dio.get("$baseUrl/get-address");
 
-  void addAddress(AddressModel address) {
-    address.id = DateTime.now().millisecondsSinceEpoch.toString();
-    addresses.add(address);
-  }
-
-  void updateAddress(String id, AddressModel updatedAddress) {
-    int index = addresses.indexWhere((addr) => addr.id == id);
-    if (index != -1) {
-      addresses[index] = updatedAddress;
+      if (response.data['status'] == true) {
+        final List<dynamic> addressData = response.data['data'];
+        addresses.clear();
+        addresses.addAll(
+          addressData
+              .map(
+                (item) => AddressModel(
+                  id: item['_id'],
+                  streetAddress: item['streetAddress'],
+                  city: item['city'],
+                  state: item['state'],
+                  postalCode: item['postalCode'],
+                  country: item['country'],
+                ),
+              )
+              .toList(),
+        );
+      } else {
+        error.value = response.data['message'] ?? 'Failed to fetch addresses';
+      }
+    } catch (e) {
+      error.value = 'Error fetching addresses: $e';
+      print("API Error: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void deleteAddress(String id) {
-    addresses.removeWhere((addr) => addr.id == id);
+  Future<void> addAddress(AddressModel address) async {
+    isLoading.value = true;
+    error.value = '';
+    try {
+      final response = await _dio.post(
+        "$baseUrl/add-address",
+        data: {
+          "streetAddress": address.streetAddress,
+          "city": address.city,
+          "state": address.state,
+          "postalCode": address.postalCode,
+          "country": address.country,
+        },
+      );
+
+      if (response.data['status'] == true) {
+        final data = response.data['data'];
+        final newAddress = AddressModel(
+          id: data['_id'],
+          streetAddress: data['streetAddress'],
+          city: data['city'],
+          state: data['state'],
+          postalCode: data['postalCode'],
+          country: data['country'],
+        );
+        addresses.add(newAddress);
+        Get.snackbar(
+          'Success',
+          'Address added successfully',
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      } else {
+        error.value = response.data['message'] ?? 'Failed to add address';
+        Get.snackbar(
+          'Error',
+          error.value,
+          colorText: Colors.white,
+          backgroundColor: Colors.red,
+        );
+      }
+    } catch (e) {
+      error.value = 'Error adding address: $e';
+      Get.snackbar(
+        'Error',
+        'Failed to add address',
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+      print("API Error: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateAddress(String id, AddressModel updatedAddress) async {
+    isLoading.value = true;
+    error.value = '';
+    try {
+      final response = await _dio.put(
+        "$baseUrl/update-address",
+        data: {
+          "id": id,
+          "streetAddress": updatedAddress.streetAddress,
+          "city": updatedAddress.city,
+          "state": updatedAddress.state,
+          "postalCode": updatedAddress.postalCode,
+          "country": updatedAddress.country,
+        },
+      );
+
+      if (response.data['status'] == true) {
+        final data = response.data['data'];
+        final index = addresses.indexWhere((addr) => addr.id == id);
+        if (index != -1) {
+          addresses[index] = AddressModel(
+            id: data['_id'],
+            streetAddress: data['streetAddress'],
+            city: data['city'],
+            state: data['state'],
+            postalCode: data['postalCode'],
+            country: data['country'],
+          );
+        }
+        Get.snackbar(
+          'Success',
+          'Address updated successfully',
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      } else {
+        error.value = response.data['message'] ?? 'Failed to update address';
+        Get.snackbar(
+          'Error',
+          error.value,
+          colorText: Colors.white,
+          backgroundColor: Colors.red,
+        );
+      }
+    } catch (e) {
+      error.value = 'Error updating address: $e';
+      Get.snackbar(
+        'Error',
+        'Failed to update address',
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+      print("API Error: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteAddress(String id) async {
+    isLoading.value = true;
+    error.value = '';
+    try {
+      final response = await _dio.delete(
+        "$baseUrl/delete-address",
+        data: {"id": id},
+      );
+
+      if (response.data['status'] == true) {
+        addresses.removeWhere((addr) => addr.id == id);
+        Get.snackbar(
+          'Success',
+          'Address deleted successfully',
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      } else {
+        error.value = response.data['message'] ?? 'Failed to delete address';
+        Get.snackbar(
+          'Error',
+          error.value,
+          colorText: Colors.white,
+          backgroundColor: Colors.red,
+        );
+      }
+    } catch (e) {
+      error.value = 'Error deleting address: $e';
+      Get.snackbar(
+        'Error',
+        'Failed to delete address',
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+      print("API Error: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 }
-
-
-// It is for API Integration (My API Facing socket error so i'll solve ASAP)
-
-// import 'package:get/get.dart';
-// import 'package:interview_task/Model/address_model.dart';
-// import 'package:interview_task/Services/api_services.dart';
-
-// import 'package:uuid/uuid.dart';
-
-// class AddressController extends GetxController {
-//   var addresses = <AddressModel>[].obs;
-//   final ApiService _apiService = ApiService();
-//   var isLoading = false.obs;
-//   var errorMessage = ''.obs;
-//   final Uuid _uuid = Uuid();
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     fetchAndPrintUserData();
-//     fetchAddresses();
-//   }
-
-//   void fetchAndPrintUserData() async {
-//   final apiService = ApiService();
-//   await apiService.fetchUserData();
-// }
-
-
-//   Future<void> fetchAddresses() async {
-//     try {
-//       isLoading(true);
-//       errorMessage('');
-//       final fetchedAddresses = await _apiService.getAddresses();
-//       addresses.value = fetchedAddresses;
-//     } catch (e) {
-//       errorMessage('Error fetching addresses: $e');
-//       print(e);
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-
-
-//   Future<void> addAddress(AddressModel address) async {
-//     try {
-//       isLoading(true);
-//       errorMessage('');
-
-
-//       String uuidStr = _uuid.v4();
-//       int uniqueId = uuidStr.hashCode.abs(); 
-//       address.id = uniqueId;
-
-//       final success = await _apiService.addAddress(address);
-//       if (success) {
-//         await fetchAddresses(); 
-//       } else {
-//         errorMessage('Failed to add address');
-//       }
-//     } catch (e) {
-//       errorMessage('Error adding address: $e');
-//       print(e);
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-
-
-//   Future<void> updateAddress(dynamic id, AddressModel updatedAddress) async {
-//     try {
-//       isLoading(true);
-//       errorMessage('');
-
-//       updatedAddress.id = id;
-//       final success = await _apiService.updateAddress(updatedAddress);
-
-//       if (success) {
-//         await fetchAddresses(); 
-//       } else {
-//         errorMessage('Failed to update address');
-//       }
-//     } catch (e) {
-//       errorMessage('Error updating address: $e');
-//       print(e);
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-
-
-//   Future<void> deleteAddress(dynamic id) async {
-//     try {
-//       isLoading(true);
-//       errorMessage('');
-
-//       final success = await _apiService.deleteAddress(id);
-
-//       if (success) {
-//         await fetchAddresses(); 
-//       } else {
-//         errorMessage('Failed to delete address');
-//       }
-//     } catch (e) {
-//       errorMessage('Error deleting address: $e');
-//       print(e);
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-// }

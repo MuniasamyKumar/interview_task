@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interview_task/Model/user_model.dart';
 import 'package:interview_task/Routes/app_routes.dart';
@@ -13,6 +14,12 @@ class AuthController extends GetxController {
   void onReady() {
     super.onReady();
     user.value = _getUser();
+
+     if (user.value == null) {
+      Get.offAllNamed(AppRoutes.phoneNumberScreen);
+    } else {
+      Get.offAllNamed(AppRoutes.home);
+    }
   }
 
   UserModel? _getUser() {
@@ -29,10 +36,10 @@ class AuthController extends GetxController {
       verificationCompleted: (PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
         user.value = _getUser();
-        Get.snackbar("Success", "User signed in automatically!");
+        Get.snackbar("Success", "User signed in automatically!",colorText: Colors.white,backgroundColor: Colors.green);
       },
       verificationFailed: (FirebaseAuthException e) {
-        Get.snackbar("Error", e.message ?? "Verification failed");
+        Get.snackbar("Error", e.message ?? "Verification failed",colorText: Colors.white,backgroundColor: Colors.red);
       },
       codeSent: (String verificationId, int? resendToken) {
         this.verificationId.value = verificationId;
@@ -52,16 +59,16 @@ class AuthController extends GetxController {
       );
       await _auth.signInWithCredential(credential);
       user.value = _getUser();
-      Get.snackbar("Success", "User signed in successfully");
+      Get.snackbar("Success", "User signed in successfully",colorText: Colors.white,backgroundColor: Colors.green);
       Get.offAllNamed(AppRoutes.home);
     } catch (e) {
-      Get.snackbar("Error", "Invalid OTP");
+      Get.snackbar("Error", "Invalid OTP",colorText: Colors.white,backgroundColor: Colors.red);
     }
   }
 
   void signOut() async {
     await _auth.signOut();
     user.value = null;
-    Get.snackbar("Logged Out", "User signed out successfully");
+    Get.snackbar("Logged Out", "User signed out successfully", colorText: Colors.white,backgroundColor: Colors.green);
   }
 }

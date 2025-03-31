@@ -15,20 +15,20 @@ class _OTPScreenState extends State<OTPScreen> with CodeAutoFill {
   final TextEditingController otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  final RxBool isOtpFilled = false.obs;
+
   @override
   void initState() {
     super.initState();
-    listenForCode(); 
+    listenForCode();
   }
 
   @override
   void codeUpdated() {
     setState(() {
-      otpController.text = code ?? ""; 
+      otpController.text = code ?? "";
     });
-    if (otpController.text.length == 6) {
-      authController.verifyOTP(otpController.text);
-    }
+    isOtpFilled.value = otpController.text.length == 6;
   }
 
   @override
@@ -90,34 +90,37 @@ class _OTPScreenState extends State<OTPScreen> with CodeAutoFill {
                     ),
                     currentCode: otpController.text,
                     onCodeChanged: (code) {
-                      if (code != null && code.length == 6) {
-                        authController.verifyOTP(code);
-                      }
+                      isOtpFilled.value = (code?.length == 6);
                     },
                   ),
 
                   const SizedBox(height: 20),
 
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        authController.verifyOTP(otpController.text);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF673AB7),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  Obx(
+                    () => ElevatedButton(
+                      onPressed:
+                          isOtpFilled.value
+                              ? () {
+                                if (_formKey.currentState!.validate()) {
+                                  authController.verifyOTP(otpController.text);
+                                }
+                              }
+                              : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF673AB7),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Verify OTP',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
+                      child: Text(
+                        'Verify OTP',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
                       ),
                     ),
                   ),
@@ -136,4 +139,3 @@ class _OTPScreenState extends State<OTPScreen> with CodeAutoFill {
     super.dispose();
   }
 }
-
